@@ -5,22 +5,20 @@ import { audio } from '../engine/audio'
 import { Background } from './art'
 
 export function Title() {
-  const { setScreen, newGame, continueGame, startTruth, saves, meta, settings } = useGame()
+  const { setScreen, newGame, continueGame, saves, settings } = useGame()
   const [pos, setPos] = useState({ x: 62, y: 55 })
   const [opening, setOpening] = useState(false)
-  const truthReady = meta.routesDone.length >= 4
 
   useEffect(() => { audio.configure(settings.volume, settings.muted) }, [settings.volume, settings.muted])
 
-  const start = (kind: 'new' | 'truth') => {
+  const start = () => {
     audio.start()
     setOpening(true)
-    setTimeout(() => (kind === 'new' ? newGame() : startTruth()), 1700)
+    setTimeout(() => newGame(), 1700)
   }
   const hasSave = !!saves.auto || saves.slots.some(Boolean)
-  const menu: { label: string; on: () => void; disabled?: boolean; accent?: boolean }[] = [
-    ...(truthReady ? [{ label: 'THE FIFTH DOOR', on: () => start('truth'), accent: true }] : []),
-    { label: 'NEW GAME', on: () => start('new') },
+  const menu: { label: string; on: () => void; disabled?: boolean }[] = [
+    { label: 'NEW GAME', on: () => start() },
     { label: 'CONTINUE', on: () => { audio.start(); continueGame() }, disabled: !saves.auto },
     { label: 'LOAD', on: () => setScreen('saves'), disabled: !hasSave },
     { label: 'RECORDS', on: () => setScreen('records') },
@@ -39,14 +37,14 @@ export function Title() {
 
       <motion.div className="relative z-10 flex h-full flex-col justify-between px-[7vw] py-[6vh] portrait:px-8" animate={{ opacity: opening ? 0 : 1 }} transition={{ delay: opening ? 0.7 : 0, duration: 0.9 }}>
         <header>
-          <p className="font-display text-xs tracking-[.5em] text-gold/90 sm:text-sm">A GOTHIC MYSTERY ROMANCE</p>
+          <p className="font-display text-xs tracking-[.5em] text-gold/90 sm:text-sm">A GOTHIC ROMANCE</p>
           <h1 className="mt-5 font-display text-[clamp(2.8rem,8vw,6.5rem)] font-medium leading-[.95] tracking-[.04em] text-ivory [text-shadow:0_4px_30px_rgba(0,0,0,.7)]">The<br />Labyrinth</h1>
           <div className="mt-6 flex items-center gap-4"><span className="h-px w-14 bg-gold/70" /><p className="text-lg text-ivory/90 sm:text-2xl">미궁 속의 티타임</p></div>
           <p className="mt-3 pl-[4.5rem] font-display text-sm italic text-fog">당신이 쓰지 못한 마지막 장</p>
         </header>
         <nav aria-label="메인 메뉴" className="flex flex-col">
           {menu.map((m) => (
-            <button key={m.label} className={`menu-item ${m.accent ? '!text-rose' : ''}`} disabled={m.disabled} onClick={m.on}>{m.label}</button>
+            <button key={m.label} className={`menu-item`} disabled={m.disabled} onClick={m.on}>{m.label}</button>
           ))}
         </nav>
       </motion.div>

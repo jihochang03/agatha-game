@@ -1,6 +1,5 @@
 import type { Aff, Choice, Cond, Effects, RouteId, StoryNode } from './types'
 import { ROUTES } from './types'
-import { DEDUCTIONS } from '../data/world'
 
 /** 게임 진행 상태 중 분기 판정에 필요한 부분. UI/스토어와 검증 스크립트가 공유한다. */
 export interface Progress {
@@ -59,24 +58,8 @@ export function topRoute(p: Progress): RouteId {
   return best
 }
 
-export function tryCombine(p: Progress, a: string, b: string): { ok: boolean; id?: string } {
-  const d = DEDUCTIONS.find((x) => (x.a === a && x.b === b) || (x.a === b && x.b === a))
-  if (!d) return { ok: false }
-  if (!p.evidence.includes(a) || !p.evidence.includes(b)) return { ok: false }
-  return { ok: true, id: d.id }
-}
-
 /** 노드를 지나고 난 뒤 다음 노드 id를 결정한다. 선택지가 있는 노드는 null. */
 export function resolveNext(p: Progress, n: StoryNode, routesDone = 0): string | null {
   if (n.branch) for (const b of n.branch) if (checkCond(p, b.cond, routesDone)) return b.next
-  if (n.event?.type === 'routeDecide') return topRoute(p)
   return n.nextNode ?? null
-}
-
-export function eventGateOk(p: Progress, n: StoryNode): boolean {
-  const ev = n.event
-  if (!ev) return true
-  if (ev.type === 'explore') return p.evidence.length >= ev.need
-  if (ev.type === 'board') return ev.need.every((d) => p.deductions.includes(d))
-  return true
 }

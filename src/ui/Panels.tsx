@@ -13,7 +13,7 @@ export function SavePanel({ canSave }: { canSave?: boolean }) {
       <div className="min-w-0 text-sm">
         <b className="text-gold">{label}</b>
         {d ? <p className="truncate text-ivory/80">{d.chapter}</p> : <p className="text-fog">비어 있음</p>}
-        {d && <p className="text-xs text-fog">{fmt(d.time)}{d.truth ? ' · 진실 루트' : ''}</p>}
+        {d && <p className="text-xs text-fog">{fmt(d.time)}</p>}
       </div>
       <div className="flex shrink-0 gap-1.5">
         {canSave && idx !== 'auto' && <button className="btn !px-3 !py-1 text-sm" onClick={() => g.saveSlot(idx)}>저장</button>}

@@ -17,16 +17,18 @@ export function build(prefix: string, chapter: string, route: StoryNode['route']
   let exA: Expr | undefined
   let exR: Expr | undefined
   let chap = chapter
+  let hide: boolean | undefined
   return items.map((it, i) => {
     if (it.background !== undefined) bg = it.background
     if (it.character !== undefined) ch = it.character
+    if (it.hideA !== undefined) hide = it.hideA
     const isA = it.speaker === 'agatha'
     if (it.expression !== undefined) { if (isA) exA = it.expression; else exR = it.expression }
     const ex = isA ? exA : exR
     const itAny = it as Item & { chapter?: string }
     if (itAny.chapter) chap = itAny.chapter
     const terminal = it.event?.type === 'ending'
-    const hasOut = it.choices || it.branch || it.event?.type === 'routeDecide'
+    const hasOut = it.choices || it.branch
     const next = it.nextNode !== undefined ? it.nextNode : terminal || hasOut ? undefined : ids[i + 1]
     const node: StoryNode = {
       ...it,
@@ -36,6 +38,7 @@ export function build(prefix: string, chapter: string, route: StoryNode['route']
       background: bg,
       character: ch,
       expression: ex,
+      hideA: hide,
       nextNode: next,
     }
     return node

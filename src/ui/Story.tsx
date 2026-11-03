@@ -7,19 +7,13 @@ import { choiceAvailable } from '../engine/logic'
 import { MANUSCRIPT } from '../data/world'
 import { Background, Figure, ROY_GLOW } from './art'
 import { Modal } from './kit'
-import { MasksPanel } from './Masks'
 import { SavePanel, SettingsPanel } from './Panels'
 import type { Expr } from '../engine/types'
 
 const GLITCH = ['루이', '로ㅇ', 'R○Y', '…이', '노이', '로이']
-const CUP_MEMORIES = [
-  '비 오는 오후. 두 개의 찻잔. 한 사람은 웃고 있었고, 한 사람은 그 웃음을 오래 바라보았다. "설탕은 두 개요." 누가 한 말인지, 기억이 흐려진다.',
-  '찻잔 바닥에 비친 얼굴은 아가사가 아니었다. 그 얼굴은 눈을 감는 순간 아가사의 것이 되었다.',
-  '"마시지 말아요." 누군가 속삭였다. 그러나 이미 입술에는 따뜻한 향이 닿아 있었고, 기억은 거기서 끊겨 있었다.',
-]
 const SUB_EN: Record<string, string> = {
-  '눈을 뜨면': 'WHEN YOU WAKE', '하이드로 호텔': 'HYDRO HOTEL', '가면 속의 남자': 'THE MAN IN THE MASK', '미궁 속의 티타임': 'TEATIME IN THE LABYRINTH',
-  '사랑과 배신': 'LOVE AND BETRAYAL', '마지막 장': 'THE LAST CHAPTER', '다섯 번째 문': 'THE FIFTH DOOR',
+  '폭우의 밤': 'THE STORM', '하이드로 호텔': 'HYDRO HOTEL', '독의 원고': 'THE POISON MANUSCRIPT',
+  '함께 쓰는 이야기': 'WRITTEN TOGETHER', '와인과 밤': 'WINE AND NIGHT', '아침': 'MORNING',
 }
 function chapterLabel(ch: string): [string, string] {
   const [a, b = ''] = ch.split(' — ')
@@ -43,8 +37,6 @@ function useTypewriter(text: string, speed: 'slow' | 'normal' | 'instant', key: 
 export function Story() {
   const g = useGame()
   const node = STORY[g.nodeId]
-  const [flicker, setFlicker] = useState(false)
-  const [cup, setCup] = useState<string | null>(null)
   const [glitch, setGlitch] = useState<string | null>(null)
   const [erased, setErased] = useState(false)
   const [clock, setClock] = useState(false)
@@ -111,30 +103,27 @@ export function Story() {
   if (isA) lastA.current = node.expression ?? 'neutral'
   else lastR.current = node.expression ?? 'neutral'
   const exprA: Expr = lastA.current
-  const exprR: Expr = flicker ? 'cold' : lastR.current
+  const exprR: Expr = lastR.current
   const lit = (side: 'agatha' | 'roy') => (node.speaker === 'narr' ? 0.84 : (side === 'agatha') === isA ? 1.04 : 0.6)
   const royVoice = node.speaker === 'roy' ? `voice-${who === 'roy' || !who ? 'roy' : who}` : ''
   const [chHead, chSub] = chapterLabel(node.chapter)
   const tint = ROY_GLOW[(who ?? 'roy') as keyof typeof ROY_GLOW]
-  const hot = (kind: 'mirror' | 'cup') => {
-    if (kind === 'mirror') {
-      setFlicker(true)
-      setTimeout(() => setFlicker(false), 800)
-      if (!who) g.showToast('거울 속의 남자가 잠깐, 다른 표정으로 웃은 것 같다.')
-    } else setCup(CUP_MEMORIES[(g.log.length + g.corridor) % CUP_MEMORIES.length])
-  }
   const choicesNow = hasChoices && done
 
   return (
     <div className="absolute inset-0 select-none overflow-hidden" onClick={onNext}>
-      <Background id={node.background} corridor={g.corridor} warm={warm} horror={horror} onMirror={() => hot('mirror')} onCup={() => hot('cup')} />
+      <Background id={node.background} warm={warm} horror={horror} />
       <div key={node.background} className="scene-fade pointer-events-none absolute inset-0 z-30" />
 
       {/* 무대: 아가사는 왼쪽, 로이는 오른쪽. 같은 크기, 같은 기준선. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-[21vh] z-10 h-[min(64vh,92vw)] portrait:bottom-[26vh]">
-        <motion.div className="absolute bottom-0 left-[9%] h-full aspect-[700/940] portrait:left-[-14vw]" style={{ zIndex: isA ? 12 : 11 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-          <Figure who="agatha" expr={exprA} lit={lit('agatha')} warm={warm} tint="#b68b94" />
-        </motion.div>
+        <AnimatePresence>
+          {(!node.hideA || isA) && (
+            <motion.div key="agatha" className="absolute bottom-0 left-[9%] h-full aspect-[700/940] portrait:left-[-14vw]" style={{ zIndex: isA ? 12 : 11 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
+              <Figure who="agatha" expr={exprA} lit={lit('agatha')} warm={warm} tint="#b68b94" />
+            </motion.div>
+          )}
+        </AnimatePresence>
         <AnimatePresence>
           {who && (
             <motion.div key="roy" className="absolute bottom-0 right-[9%] h-full aspect-[700/940] portrait:right-[-14vw]" style={{ zIndex: isA ? 11 : 12 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }}>
@@ -173,7 +162,7 @@ export function Story() {
           <motion.div className="absolute inset-0 z-20 flex items-center justify-center bg-[#08090d]/50 px-4 pb-[12vh]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={(e) => e.stopPropagation()}>
             <div role="group" aria-label="선택지" className="flex w-full max-w-[760px] flex-col gap-2.5">
               {node.choices!.map((c, i) => {
-                const ok = choiceAvailable(g.progress, c, g.meta.routesDone.length)
+                const ok = choiceAvailable(g.progress, c)
                 return (
                   <motion.button key={i} className="choice" disabled={!ok} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.09 }} onClick={() => g.choose(i)}>
                     <span className="mr-2 font-display text-gold/80">{i + 1}</span>{c.label}
@@ -208,10 +197,8 @@ export function Story() {
         )}
       </AnimatePresence>
 
-      {cup && <Modal title="찻잔 속의 기억" onClose={() => setCup(null)}><p className="leading-8 text-ivory/90">{cup}</p></Modal>}
       {g.overlay === 'log' && <LogPanel onClose={() => g.setOverlay(null)} />}
       {g.overlay === 'manuscript' && <ManuscriptPanel echo={node.echo} onClose={() => g.setOverlay(null)} />}
-      {g.overlay === 'masks' && <Modal title="로이의 가면" wide onClose={() => g.setOverlay(null)}><MasksPanel /></Modal>}
       {g.overlay === 'menu' && <MenuPanel />}
     </div>
   )
@@ -278,7 +265,6 @@ function MenuPanel() {
       <div className="flex flex-col">
         {item('계속하기', () => g.setOverlay(null))}
         {item('저장 / 불러오기', () => setSub('save'))}
-        {item('로이의 가면', () => g.setOverlay('masks'))}
         {item(g.settings.auto ? '자동 진행 끄기' : '자동 진행 켜기', () => g.setSettings({ auto: !g.settings.auto }))}
         {item('설정', () => setSub('settings'))}
         {item('타이틀로', () => g.setScreen('title'))}

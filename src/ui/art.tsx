@@ -162,8 +162,9 @@ function Hot({ x, y, w, h, label, on }: { x: number; y: number; w: number; h: nu
   return <rect x={x} y={y} width={w} height={h} fill="transparent" className="hot" style={{ cursor: 'pointer' }} aria-label={label} role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); on() }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); on() } }} />
 }
 
-function Props({ id, c, corridor, onMirror, onCup }: { id: string; c: RoomCfg; corridor: number; onMirror?: () => void; onCup?: () => void }) {
+function Props({ id, c, corridor, onMirror, onCup, hits }: { id: string; c: RoomCfg; corridor: number; onMirror?: () => void; onCup?: () => void; hits?: Record<string, () => void> }) {
   const [x0, y0, x1, y1] = c.back
+  const hp = (k: string) => (hits?.[k] ? { className: 'hit', role: 'button' as const, 'aria-label': k, onClick: (e: React.MouseEvent) => { e.stopPropagation(); hits[k]() } } : {})
   const cx = (x0 + x1) / 2
   const frame = '#8c7650'
   switch (id) {
@@ -186,7 +187,7 @@ function Props({ id, c, corridor, onMirror, onCup }: { id: string; c: RoomCfg; c
       return <>
         <Moon c={c} side="l" t0={0.25} t1={0.6} />
         {[0, 1, 2].map((i) => <g key={i}><rect x={x0 + 30 + i * 230} y={y0 + 30} width="190" height={y1 - y0 - 40} fill="#25140f" stroke={frame} strokeWidth="2" />{[0, 1, 2, 3, 4].map((r) => <g key={r}><line x1={x0 + 30 + i * 230} x2={x0 + 220 + i * 230} y1={y0 + 70 + r * 70} y2={y0 + 70 + r * 70} stroke={frame} opacity=".6" />{Array.from({ length: 9 }).map((_, b) => <rect key={b} x={x0 + 38 + i * 230 + b * 20} y={y0 + 74 + r * 70 - 40 + (b % 3) * 4} width="15" height={36 - (b % 3) * 4} fill={['#4b202c', '#1f2b3c', '#3a2a1a', '#2a3a2e'][(b + r + i) % 4]} />)}</g>)}</g>)}
-        <rect x="540" y="690" width="520" height="40" fill="#2a1710" stroke={frame} strokeWidth="2" /><rect x="570" y="730" width="30" height="130" fill="#2a1710" /><rect x="1000" y="730" width="30" height="130" fill="#2a1710" />
+        <g {...hp('o_desk')}><rect x="520" y="640" width="560" height="110" fill="transparent" /></g><rect x="540" y="690" width="520" height="40" fill="#2a1710" stroke={frame} strokeWidth="2" /><rect x="570" y="730" width="30" height="130" fill="#2a1710" /><rect x="1000" y="730" width="30" height="130" fill="#2a1710" />
         <path d="M700 690 l60 -18 l60 18 z" fill="#d9cfb8" opacity=".85" />
         <Candle x={620} y={664} id={2} s={1.3} /><Candle x={980} y={668} id={3} s={1.1} />
         <Chandelier x={800} y={70} s={0.8} />
@@ -238,22 +239,21 @@ function Props({ id, c, corridor, onMirror, onCup }: { id: string; c: RoomCfg; c
     case 'room':
       return <>
         <Moon c={c} side="r" t0={0.3} t1={0.65} hue="#6a7bb0" />
-        <rect x="470" y="470" width="420" height="190" rx="10" fill="#3a1c2a" stroke={frame} strokeWidth="3" />
+        <g {...hp('o_bed')}><rect x="460" y="400" width="440" height="270" fill="transparent" /></g><rect x="470" y="470" width="420" height="190" rx="10" fill="#3a1c2a" stroke={frame} strokeWidth="3" />
         <rect x="470" y="410" width="60" height="250" fill="#2a1420" stroke={frame} strokeWidth="2" /><rect x="470" y="440" width="420" height="40" fill="#5a2635" />
         <rect x="1010" y="270" width="110" height="390" fill="#2a1710" stroke={frame} strokeWidth="3" />
         <rect x="940" y="520" width="60" height="140" fill="#2a1710" stroke={frame} />
         <ellipse cx="970" cy="516" rx="20" ry="7" fill="#efe6d3" opacity=".8" />
         <rect x="620" y="260" width="140" height="170" fill="#0d1018" stroke={frame} strokeWidth="4" /><rect x="630" y="270" width="120" height="150" fill="url(#mirror)" />
-        <text x="1030" y="310" fontSize="22" fill="#b9a078" opacity=".7" fontFamily="Cormorant Garamond, serif">1313</text>
-        <Candle x={950} y={510} id={7} s={0.9} />
+                <Candle x={950} y={510} id={7} s={0.9} />
       </>
     case 'garden':
       return <>
         {[0, 1, 2, 3, 4, 5, 6].map((i) => <path key={i} d={`M${100 + i * 220} 900 V${300 + (i % 2) * 40} Q${100 + i * 220} 120 ${210 + i * 220} 120`} fill="none" stroke="#2a3a3a" strokeWidth="7" opacity=".7" />)}
         <path d="M0 140 Q800 -30 1600 140" fill="none" stroke="#2a3a3a" strokeWidth="8" opacity=".7" />
-        {[120, 300, 520, 760, 980, 1180, 1400].map((x, i) => <g key={x}><path d={`M${x} 900 q${i % 2 ? -30 : 30} -${130 + (i % 3) * 50} 0 -${220 + (i % 3) * 60}`} stroke="#142a22" strokeWidth="9" fill="none" /><circle cx={x} cy={680 - (i % 3) * 55} r="20" fill="#16101a" stroke="#6b1d2c" strokeWidth="3" /><circle cx={x + 28} cy={730 - (i % 3) * 40} r="14" fill="#16101a" stroke="#6b1d2c" strokeWidth="2" /></g>)}
+        {[120, 300, 520, 760, 980, 1180, 1400].map((x, i) => <g key={x} {...hp('o_rose')}><circle cx={x} cy={650 - (i % 3) * 50} r="70" fill="transparent" /><path d={`M${x} 900 q${i % 2 ? -30 : 30} -${130 + (i % 3) * 50} 0 -${220 + (i % 3) * 60}`} stroke="#142a22" strokeWidth="9" fill="none" /><circle cx={x} cy={680 - (i % 3) * 55} r="20" fill="#16101a" stroke="#6b1d2c" strokeWidth="3" /><circle cx={x + 28} cy={730 - (i % 3) * 40} r="14" fill="#16101a" stroke="#6b1d2c" strokeWidth="2" /></g>)}
         <circle cx="1220" cy="150" r="70" fill="#cfd8f0" opacity=".5" filter="url(#blur6)" /><circle cx="1220" cy="150" r="46" fill="#e6ebfa" opacity=".8" />
-        <rect x="1080" y="770" width="300" height="16" fill="#2a2a2e" /><rect x="1100" y="786" width="14" height="60" fill="#2a2a2e" /><rect x="1350" y="786" width="14" height="60" fill="#2a2a2e" />
+        <g {...hp('o_bench')}><rect x="1060" y="730" width="340" height="120" fill="transparent" /><rect x="1080" y="770" width="300" height="16" fill="#2a2a2e" /></g><rect x="1100" y="786" width="14" height="60" fill="#2a2a2e" /><rect x="1350" y="786" width="14" height="60" fill="#2a2a2e" />
       </>
     case 'cellar':
       return <>
@@ -285,23 +285,25 @@ function Void() {
   )
 }
 
-export function Background({ id = 'lobby', corridor = 0, warm = false, horror = false, onMirror, onCup }: { id?: string; corridor?: number; warm?: boolean; horror?: boolean; onMirror?: () => void; onCup?: () => void }) {
+export function Background({ id = 'lobby', corridor = 0, warm = false, horror = false, onMirror, onCup, hits, still }: { id?: string; corridor?: number; warm?: boolean; horror?: boolean; onMirror?: () => void; onCup?: () => void; hits?: Record<string, () => void>; still?: boolean }) {
   const img = BG_IMAGES[id]
   const c = ROOMS[id]
   const hue = id === 'corridor' ? Math.min(corridor, 6) * 8 : 0
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#08090d]">
-      <div className="absolute inset-[-4%] cam-drift" style={{ filter: hue ? `hue-rotate(${hue}deg)` : undefined, transition: 'filter 1.4s' }}>
+      <div className={`absolute ${still ? "inset-0" : "inset-[-4%] cam-drift"}`} style={{ filter: hue ? `hue-rotate(${hue}deg)` : undefined, transition: 'filter 1.4s' }}>
         {img ? (
           <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
           <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
             <Defs warm={warm} />
-            {id === 'garden' ? (
+            {id === 'storm' ? (
+              <Storm />
+            ) : id === 'garden' ? (
               <>
                 <rect width="1600" height="900" fill="url(#night)" />
                 <rect y="700" width="1600" height="200" fill="#0b1815" />
-                <Props id={id} c={ROOMS.lobby} corridor={corridor} />
+                <Props id={id} c={ROOMS.lobby} corridor={corridor} hits={hits} />
                 <rect y="560" width="1600" height="340" fill="url(#mist)" className="mist" />
               </>
             ) : id === 'void' ? (
@@ -310,12 +312,13 @@ export function Background({ id = 'lobby', corridor = 0, warm = false, horror = 
               <>
                 <rect width="1600" height="900" fill={c.ceil} />
                 <Shell c={c} id={id} corridor={corridor} />
-                <Props id={id} c={c} corridor={corridor} onMirror={onMirror} onCup={onCup} />
+                <Props id={id} c={c} corridor={corridor} onMirror={onMirror ?? hits?.o_mirror} onCup={onCup ?? hits?.o_cup} hits={hits} />
               </>
             ) : null}
           </svg>
         )}
       </div>
+      {id === 'storm' && <><div className="rain pointer-events-none absolute inset-0" /><div className="rain rain2 pointer-events-none absolute inset-0" /></>}
       {/* 먼지 입자 */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         {DUST.map((d, i) => <span key={i} className="dust" style={{ left: `${d[0]}%`, top: `${d[1]}%`, width: d[2], height: d[2], animationDuration: `${d[3]}s`, animationDelay: `-${d[4]}s` }} />)}
@@ -354,4 +357,28 @@ function Defs({ warm }: { warm: boolean }) {
 /** 갤러리 등에서 쓰는 단순 PNG 초상 (route 는 로이로 매핑) */
 export function Portrait({ who, expr = 'neutral' }: { who: 'agatha' | 'roy' | RouteId; expr?: Expr }) {
   return <img src={charSrc(who === 'agatha' ? 'agatha' : 'roy', expr)} alt="" draggable={false} className="h-full w-auto object-contain object-bottom" />
+}
+
+function Storm() {
+  return (
+    <g>
+      <rect width="1600" height="900" fill="url(#night)" />
+      <rect width="1600" height="900" fill="#0a0d16" opacity=".35" />
+      <g opacity=".9">
+        <rect x="120" y="330" width="300" height="360" fill="#10141f" /><path d="M100 330 L270 250 L440 330Z" fill="#0c0f18" />
+        {[0, 1, 2].flatMap((r) => [0, 1, 2, 3].map((c) => <rect key={`${r}${c}`} x={145 + c * 68} y={365 + r * 90} width="34" height="48" fill="#ffc47a" opacity={(r + c) % 3 === 0 ? 0.25 : 0.8} />))}
+        <circle cx="270" cy="520" r="210" fill="url(#glowW)" opacity=".5" />
+      </g>
+      <path d="M1500 900 V420 Q1500 340 1460 280 M1500 520 Q1580 450 1630 360 M1500 600 Q1410 520 1370 440" stroke="#0a0f0d" strokeWidth="38" fill="none" strokeLinecap="round" />
+      <ellipse cx="1460" cy="250" rx="170" ry="120" fill="#0a100e" />
+      <g transform="translate(1040 600) rotate(-7)">
+        <path d="M0 80 L40 20 Q70 -6 150 -6 H300 Q350 0 390 40 L420 80Z" fill="#14161d" stroke="#2a2d38" strokeWidth="3" />
+        <circle cx="90" cy="82" r="30" fill="#0a0b10" stroke="#2a2d38" strokeWidth="4" /><circle cx="330" cy="82" r="30" fill="#0a0b10" stroke="#2a2d38" strokeWidth="4" />
+        <circle cx="-4" cy="52" r="46" fill="url(#glowW)" opacity=".6" />
+      </g>
+      <rect y="760" width="1600" height="140" fill="#0a0e14" />
+      <rect y="760" width="1600" height="140" fill="url(#mist)" className="mist" />
+      <ellipse cx="900" cy="830" rx="520" ry="26" fill="#6f86a8" opacity=".12" />
+    </g>
+  )
 }

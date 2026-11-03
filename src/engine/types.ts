@@ -37,12 +37,8 @@ export interface Choice {
 }
 
 export type GameEvent =
-  | { type: 'explore'; need: number }
-  | { type: 'board'; need: string[] }
   | { type: 'ending'; id: string }
-  | { type: 'romance'; route: RouteId; n: 1 | 2 | 3 }
-  | { type: 'unlockMask'; mask: string }
-  | { type: 'routeDecide' }
+  | { type: 'cg'; id: string }
 
 export interface StoryNode {
   id: string
@@ -63,6 +59,8 @@ export interface StoryNode {
   flags?: string[]
   fx?: Fx[]
   echo?: string
+  /** true 이면 아가사 스프라이트를 숨긴다(쓰러져 있는 장면 등). 이후 노드로 이어진다. */
+  hideA?: boolean
 }
 
 export interface EvidenceDef {

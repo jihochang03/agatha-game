@@ -8,7 +8,7 @@ import { pub } from './kit'
 const KIND: Record<string, string> = { happy: 'HAPPY END', dark: 'DARK END', true: 'TRUE END', tragic: 'HIDDEN TRAGEDY' }
 
 export function Ending() {
-  const { endingId, setScreen, meta, truthUnlocked, startTruth } = useGame()
+  const { endingId, setScreen, meta } = useGame()
   const card = useRef<HTMLDivElement>(null)
   const e = endingId ? ENDING_BY_ID[endingId] : null
   if (!e) return null
@@ -44,7 +44,6 @@ export function Ending() {
         <button className="btn" onClick={() => setScreen('title')}>타이틀로</button>
         <button className="btn" onClick={() => setScreen('gallery')}>갤러리</button>
         <button className="btn" onClick={save}>엔딩 카드 저장</button>
-        {truthUnlocked() && !endingId?.startsWith('true') && endingId !== 'tragic' && <button className="btn !border-rose !text-rose" onClick={startTruth}>다섯 번째 문을 연다</button>}
       </motion.div>
     </div>
   )
