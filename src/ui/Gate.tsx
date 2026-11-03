@@ -123,14 +123,17 @@ function Place({ id, back }: { id: string; back: () => void }) {
       <Background id={l.bg} corridor={g.corridor} />
       <button className="menu-item absolute left-3 top-2 z-10 !text-base" onClick={back}>PLAN</button>
       <p className="absolute right-5 top-3 z-10 font-display text-sm tracking-[.25em] text-fog">{l.name} · {found}/{total}</p>
-      <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[#08090d] to-transparent px-6 pb-5 pt-12 text-center text-sm leading-7 text-ivory/80 sm:text-base">{l.intro}</div>
+      <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[#08090d] to-transparent px-6 pb-5 pt-12 text-center text-sm leading-7 text-ivory/80 sm:text-base">{l.intro}<span className="mt-1 block text-xs text-gold/80">반짝이는 점을 눌러 조사하세요</span></div>
       {l.objects.map((o) => {
         const got = o.evidence && g.progress.evidence.includes(o.evidence)
         const show = near === o.id
         return (
           <button key={o.id} aria-label={o.label} onClick={() => click(o)} onMouseEnter={() => setNear(o.id)} onMouseLeave={() => setNear(null)} onFocus={() => setNear(o.id)} onBlur={() => setNear(null)}
             className="group absolute z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full" style={{ left: `${o.x}%`, top: `${o.y}%` }}>
-            <span className={`block h-2 w-2 rounded-full transition-all duration-500 ${got ? 'bg-gold/40' : 'bg-gold/0 group-hover:bg-gold group-hover:shadow-[0_0_18px_6px_rgba(185,160,120,.5)]'} ${show ? 'scale-150' : ''}`} />
+            <span className="relative flex h-4 w-4 items-center justify-center">
+              {!got && <span className="absolute inset-0 animate-ping rounded-full bg-gold/40" />}
+              <span className={`relative block rounded-full transition-all duration-300 ${got ? 'h-2 w-2 bg-gold/40' : 'h-2.5 w-2.5 bg-gold/80 shadow-[0_0_14px_4px_rgba(185,160,120,.45)] group-hover:scale-150'}`} />
+            </span>
             <span className={`pointer-events-none absolute -bottom-3 whitespace-nowrap bg-[#08090d]/85 px-2 py-0.5 text-xs text-ivory transition-opacity ${show ? 'opacity-100' : 'opacity-0'}`}>{got ? '✓ ' : ''}{o.label}</span>
           </button>
         )
