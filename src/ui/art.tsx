@@ -6,14 +6,20 @@ import type { Expr, RouteId } from '../engine/types'
  *  - 캐릭터: public/assets/char/{agatha|roy}_{expr}.png  (700x940 투명 PNG, 발 기준선 통일 — 전처리 완료)
  *  - 배경:   public/assets/bg/{id}.jpg|png 를 BG_IMAGES 에 등록하면 절차적 배경 대신 사용된다.
  */
-export const BG_IMAGES: Record<string, string> = {}
+const BASE = import.meta.env.BASE_URL
+export const BG_IMAGES: Record<string, string> = Object.fromEntries(['storm', 'room', 'study', 'wine', 'morning'].map((k) => [k, `${BASE}assets/bg/${k}.jpg`]))
+/** 사진마다 시선이 가는 지점 */
+const BG_FOCUS: Record<string, string> = { storm: '50% 58%', wine: '50% 45%', morning: '50% 55%', study: '60% 30%', hall: '50% 8%', room: '50% 50%' }
 const EXPRS: Expr[] = ['neutral', 'smile', 'blush', 'cold', 'shock', 'worry', 'sad']
 export const charSrc = (who: 'agatha' | 'roy', expr: Expr) => `${import.meta.env.BASE_URL}assets/char/${who}_${EXPRS.includes(expr) ? expr : 'neutral'}.png`
 
 export const ROY_GLOW: Record<'roy' | RouteId, string> = { roy: '#9aa3b5', jak: '#8a63b5', bum: '#4aa0b0', sot: '#d9b463', go: '#b23a48' }
 
-/** 표정이 바뀔 때 이전 이미지 위로 새 이미지가 짧게 크로스페이드된다. */
-export function Figure({ who, expr, tint = '#9aa3b5', lit, warm }: { who: 'agatha' | 'roy'; expr: Expr; tint?: string; lit: number; warm?: boolean }) {
+/**
+ * 캐릭터는 얼굴 없는 실루엣으로만 보인다. 말하는 쪽은 가장자리에 림라이트가 살아나고,
+ * 듣는 쪽은 한 단계 어두워진다. 포즈가 바뀌면 짧게 크로스페이드된다.
+ */
+export function Figure({ who, expr, tint = '#b9a078', lit, warm }: { who: 'agatha' | 'roy'; expr: Expr; tint?: string; lit: number; warm?: boolean }) {
   const src = charSrc(who, expr)
   const [layers, setLayers] = useState<{ src: string; k: number }[]>([{ src, k: 0 }])
   const k = useRef(0)
@@ -22,13 +28,18 @@ export function Figure({ who, expr, tint = '#9aa3b5', lit, warm }: { who: 'agath
     const t = setTimeout(() => setLayers((l) => l.slice(-1)), 380)
     return () => clearTimeout(t)
   }, [src])
+  const rim = lit > 1 ? 1 : lit < 0.7 ? 0.15 : 0.55
+  const glow = warm ? '255,190,120' : '185,160,120'
+  const style = {
+    filter: `brightness(0) drop-shadow(0 0 1px rgba(237,228,216,${0.18 + rim * 0.5})) drop-shadow(0 0 ${10 + rim * 16}px rgba(${glow},${0.1 + rim * 0.3}))`,
+    opacity: lit > 1 ? 0.97 : lit < 0.7 ? 0.72 : 0.88,
+    transition: 'opacity .5s',
+  }
   return (
-    <div className="relative h-full w-full" style={{ filter: `brightness(${lit}) saturate(${0.78 + lit * 0.2}) ${warm ? 'sepia(.18)' : ''}`, transition: 'filter .5s' }}>
-      {/* 바닥 그림자 */}
-      <div className="absolute bottom-[3.5%] left-1/2 h-[3%] w-[46%] -translate-x-1/2 rounded-[50%] bg-black/60 blur-md" />
-      <div className="absolute inset-x-[8%] bottom-[18%] top-[8%] rounded-full opacity-25 blur-3xl" style={{ background: tint }} />
+    <div className="relative h-full w-full" data-tint={tint}>
+      <div className="absolute bottom-[3.2%] left-1/2 h-[3%] w-[52%] -translate-x-1/2 rounded-[50%] bg-black/70 blur-md" />
       {layers.map((l, i) => (
-        <img key={l.k} src={l.src} alt="" draggable={false}
+        <img key={l.k} src={l.src} alt="" draggable={false} style={style}
           className={`absolute inset-0 h-full w-full object-contain object-bottom ${i === layers.length - 1 && layers.length > 1 ? 'fig-in' : ''}`} />
       ))}
     </div>
@@ -293,7 +304,7 @@ export function Background({ id = 'lobby', corridor = 0, warm = false, horror = 
     <div className="absolute inset-0 overflow-hidden bg-[#08090d]">
       <div className={`absolute ${still ? "inset-0" : "inset-[-4%] cam-drift"}`} style={{ filter: hue ? `hue-rotate(${hue}deg)` : undefined, transition: 'filter 1.4s' }}>
         {img ? (
-          <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: BG_FOCUS[id] ?? '50% 50%', filter: id === 'storm' ? 'saturate(.8) brightness(.9)' : 'saturate(.9)' }} />
         ) : (
           <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
             <Defs warm={warm} />
@@ -324,6 +335,7 @@ export function Background({ id = 'lobby', corridor = 0, warm = false, horror = 
         {DUST.map((d, i) => <span key={i} className="dust" style={{ left: `${d[0]}%`, top: `${d[1]}%`, width: d[2], height: d[2], animationDuration: `${d[3]}s`, animationDelay: `-${d[4]}s` }} />)}
       </div>
       <div className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ opacity: warm ? 1 : 0, background: 'radial-gradient(ellipse at 50% 75%, rgba(255,170,90,.30), transparent 62%)', mixBlendMode: 'screen' }} />
+      {img && <div className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(8,9,13,.5), rgba(8,9,13,.05) 28%, rgba(8,9,13,.05) 52%, rgba(8,9,13,.78))' }} />}
       <div className="pointer-events-none absolute inset-0 vignette" />
       <div className="pointer-events-none absolute inset-0 grain" />
       <div className="pointer-events-none absolute inset-0 bg-[#08090d] transition-opacity duration-1000" style={{ opacity: horror ? 0.5 : 0 }} />

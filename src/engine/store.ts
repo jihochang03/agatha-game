@@ -73,7 +73,7 @@ export const useGame = create<GameState>((set, get) => {
     const log = restore || !n.text ? st.log : [...st.log, { speaker: n.speaker === 'roy' ? '로이' : n.speaker === 'agatha' ? '아가사' : '', text: n.text, node: n.id }].slice(-200)
     set({ nodeId: id, progress, meta, log, screen: 'story', toast: toast ?? st.toast })
     if (toast) setTimeout(() => get().toast === toast && set({ toast: null }), 3000)
-    audio.setMode(n.fx?.includes('horror') ? 'horror' : n.fx?.includes('warm') ? 'warm' : 'normal')
+    audio.scene(n.background, n.fx)
     if (!restore) autosave()
     // 화면에 보일 내용이 없는 노드는 즉시 다음으로
     if (!n.text) {
@@ -150,6 +150,7 @@ export const useGame = create<GameState>((set, get) => {
       const s = get()
       const d = i === 'auto' ? s.saves.auto : s.saves.slots[i]
       if (!d || !STORY[d.nodeId]) return false
+      audio.start()
       set({ progress: d.progress, log: d.log, endingId: null, overlay: null })
       enter(d.nodeId, true)
       return true

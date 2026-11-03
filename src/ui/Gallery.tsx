@@ -5,6 +5,7 @@ import { ENDINGS } from '../data/endings'
 import { CGS } from '../data/world'
 import { ScreenShell, pub } from './kit'
 import { Portrait } from './art'
+import { MUSIC_CREDITS, PHOTO_CREDITS } from '../data/credits'
 
 export function Gallery() {
   const { meta, setScreen } = useGame()
@@ -77,6 +78,14 @@ export function Records() {
           <div key={k} className="gold-frame bg-black/40 p-4"><dt className="text-xs text-fog">{k}</dt><dd className="font-display text-2xl text-gold">{v}</dd></div>
         ))}
       </dl>
+      <section className="mx-auto mt-10 max-w-2xl text-sm">
+        <h2 className="mb-3 flex items-center gap-3 font-display text-base tracking-[.25em] text-ivory"><span className="h-px w-6 bg-gold/70" />CREDITS</h2>
+        <p className="mb-2 text-xs text-fog">배경 사진 — Unsplash License</p>
+        <ul className="mb-5 flex flex-col gap-1 leading-6 text-ivory/80">{PHOTO_CREDITS.map((c) => <li key={c.url}><span className="text-fog">{c.use} · </span><a className="underline decoration-gold/40 hover:text-gold" href={c.url} target="_blank" rel="noreferrer">{c.title}</a></li>)}</ul>
+        <p className="mb-2 text-xs text-fog">음악 — 퍼블릭 도메인 / CC0 (Wikimedia Commons)</p>
+        <ul className="flex flex-col gap-1 leading-6 text-ivory/80">{MUSIC_CREDITS.map((c) => <li key={c.url}><span className="text-fog">{c.use} · </span><a className="underline decoration-gold/40 hover:text-gold" href={c.url} target="_blank" rel="noreferrer">{c.title}</a> — {c.by} ({c.license})</li>)}</ul>
+        <p className="mt-5 text-xs text-fog">빗소리는 WebAudio로 합성한 소리입니다.</p>
+      </section>
     </ScreenShell>
   )
 }
